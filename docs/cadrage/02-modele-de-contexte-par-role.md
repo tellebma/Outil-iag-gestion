@@ -2,97 +2,127 @@
 
 > Principe central du projet : **le contexte servi à un agent doit être à la
 > bonne altitude selon son rôle.** Donner le code complet à tout le monde est
-> inutile, coûteux (tokens) et contre-productif (bruit). On construit une
-> **pyramide de contexte** alimentée à partir du code réel.
+> inutile, coûteux (tokens) et contre-productif (bruit). Chaque rôle de
+> l'organisation reçoit un **profil de contexte** taillé pour sa mission,
+> alimenté à partir du code réel.
 
-## 1. La pyramide
+## 1. Org chart cible
 
 ```
-        ┌─────────────────────────────┐
-        │            CEO              │  Vision, objectifs, docs d'archi & de
-        │   (vue suffisante pour      │  flux, métriques. → PRIORISE & DÉLÈGUE
-        │     déléguer)               │
-        ├─────────────────────────────┤
-        │            CTO              │  Archi détaillée, carte des modules,
-        │  (cadre précisément la      │  accès « drill-down » au code.
-        │    demande)                 │  → CADRE en tickets
-        ├─────────────────────────────┤
-        │           Coder             │  Code complet + git worktree.
-        │  (produit le code)          │  → IMPLÉMENTE
-        ├─────────────────────────────┤
-        │            QA               │  Specs, tests, diffs produits.
-        │  (valide)                   │  → VÉRIFIE
-        └─────────────────────────────┘
+                         ┌───────┐
+                         │  CEO  │   vision · priorise · délègue
+                         └───┬───┘
+              ┌──────────────┴───────────────┐
+          ┌───┴───┐                       ┌───┴───┐
+          │  CTO  │ cadre technique       │  PO   │ cadre produit
+          └───┬───┘                       └───┬───┘
+              │                  ┌────────────┴───────────┐
+         ┌────┴────┐         ┌───┴────┐               ┌────┴────┐
+         │ n × DEV │         │ UI/UX  │               │ SEO/GEO │
+         │ produit │         │ design │               │ contenu │
+         │ le code │         │ parcours│              │ visibilité│
+         └─────────┘         └────────┘               └─────────┘
 ```
 
-Plus on monte, plus le contexte est **synthétique et abstrait** ; plus on
-descend, plus il est **détaillé et brut**.
+**Lignes de reporting (chaîne de délégation des heartbeats)**
+- **CEO** → CTO, PO
+- **CTO** → n × DEV
+- **PO** → UI/UX, SEO/GEO
 
-## 2. Détail par rôle
+**Rôles optionnels (à activer plus tard)**
+- **Architecte/Doc** — maintient les documents d'archi & de flux à partir du
+  code (alimente la pyramide). À défaut : porté par le **CTO**.
+- **QA** — validation des diffs. À défaut : porté par les **DEV** + **CTO**.
+- **DevOps** — CI/CD et déploiement du code produit.
 
-### CEO (et management)
-- **A besoin de** : vision produit, objectifs/missions, **documents d'archi**
-  (vue d'ensemble des composants), **documents de flux** (parcours métier),
-  métriques d'avancement et de coût.
-- **N'a pas besoin de** : le code source complet.
-- **Sortie attendue** : priorisation, allocation de budget, **délégation** à un
-  CTO avec une intention claire.
+## 2. Missions par rôle
 
-### CTO (et architectes)
-- **A besoin de** : l'archi détaillée, la **carte des modules** et leurs
-  dépendances, la capacité de **descendre dans le code** à la demande (lire un
-  fichier, chercher un symbole), l'historique des décisions techniques.
-- **Sortie attendue** : un **cadrage précis** — découpage d'un epic en tickets
-  actionnables, contraintes techniques explicitées, fichiers/zones impactés
-  identifiés.
+| Rôle | Mission | Sortie attendue |
+|------|---------|-----------------|
+| **CEO** | Vision, priorisation, allocation de budget | Délégation d'intentions claires au CTO / PO |
+| **CTO** | Cadrage technique, garant de l'archi | Découpage technique, contraintes, tickets DEV |
+| **PO** | Cadrage produit, propriétaire du backlog | Epics & user stories priorisés |
+| **DEV** | Implémentation | Diff / branche + tests, work product inspectable |
+| **UI/UX** | Expérience & interface | Parcours, composants, cohérence design |
+| **SEO/GEO** | Visibilité (moteurs de recherche **et** moteurs génératifs/LLM) | Contenu, métadonnées, structure optimisés |
 
-### Coder
-- **A besoin de** : le **code complet** dans un **git worktree** isolé, le
-  ticket cadré par le CTO, les conventions du projet.
-- **Sortie attendue** : un **diff** / une branche, des tests, un work product
-  inspectable.
+## 3. Catalogue des niveaux de contexte
 
-### QA
-- **A besoin de** : les specs du ticket, la suite de tests, le **diff produit**.
-- **Sortie attendue** : verdict de validation, anomalies remontées.
+La couche *code-aware* expose le code sous forme de **niveaux** adressables,
+du plus synthétique au plus brut :
 
-## 3. D'où viennent les « documents d'archi / flux » ?
+1. **Vision & objectifs** — missions, buts produit.
+2. **Métriques** — avancement, coût (tokens), KPIs.
+3. **Architecture** — vue d'ensemble des composants (haut niveau).
+4. **Flux métier** — parcours fonctionnels de bout en bout.
+5. **Carte des modules** — modules, dépendances, points d'entrée.
+6. **Code source** — fichiers, symboles, recherche (le plus brut).
+7. **Backlog / specs** — epics, user stories, critères d'acceptation.
+8. **Parcours utilisateur (UX)** — écrans, enchaînements, états.
+9. **Composants UI / design system** — composants front, styles, tokens.
+10. **Contenu & SEO/GEO** — pages publiques, métadonnées, routes, sitemap.
 
-Trois sources possibles (à arbitrer — *point ouvert n°3*) :
+## 4. Matrice rôle × niveau de contexte
+
+Légende : **◎** injecté par défaut au heartbeat · **○** accessible à la demande
+(drill-down via skill) · **—** non pertinent.
+
+| Niveau \ Rôle | CEO | CTO | PO | DEV | UI/UX | SEO/GEO |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|
+| 1. Vision & objectifs | ◎ | ◎ | ◎ | ○ | ◎ | ◎ |
+| 2. Métriques | ◎ | ◎ | ◎ | — | ○ | ◎ |
+| 3. Architecture | ◎ | ◎ | ○ | ◎ | ○ | ○ |
+| 4. Flux métier | ◎ | ◎ | ◎ | ○ | ◎ | ○ |
+| 5. Carte des modules | ○ | ◎ | ○ | ◎ | — | — |
+| 6. Code source | — | ◎ | — | ◎ | ○ | ○ |
+| 7. Backlog / specs | ◎ | ◎ | ◎ | ◎ | ◎ | ◎ |
+| 8. Parcours utilisateur | ○ | ○ | ◎ | ○ | ◎ | ◎ |
+| 9. Composants UI / design | — | ○ | ◎ | ○ | ◎ | ○ |
+| 10. Contenu & SEO/GEO | ○ | ○ | ◎ | ○ | ○ | ◎ |
+
+Lecture : le **CEO** délègue à partir de vues synthétiques (◎ sur 1-4, 7) sans
+jamais charger le code source (—). Le **DEV** vit dans le code (◎ sur 3, 5, 6).
+Le **SEO/GEO** est centré contenu/visibilité (◎ sur 10, 8, 2) et descend dans le
+front public à la demande (○ sur 6). L'**UI/UX** vit dans les parcours et les
+composants (◎ sur 8, 9, 4).
+
+## 5. D'où viennent les documents d'archi / flux ?
+
+Trois sources possibles (*point ouvert n°3*) :
 
 1. **Générés depuis le code** par la couche d'ingestion (carte des modules,
-   dépendances, points d'entrée → résumés).
+   dépendances → résumés).
 2. **Rédigés à la main** et versionnés.
-3. **Hybride entretenu par les agents** : générés puis raffinés/validés par un
-   agent (ex. le CTO maintient le document d'archi à jour à chaque epic).
+3. **Hybride entretenu par les agents** : génération automatique du socle, puis
+   raffinage/validation par un agent **Architecte/Doc** (ou le CTO).
 
-La cible privilégiée est l'**hybride** : génération automatique pour le socle,
-entretien par les agents pour la pertinence.
+Cible privilégiée : l'**hybride**.
 
-## 4. Mécanisme d'implémentation (esquisse)
+## 6. Mécanisme d'implémentation (esquisse)
 
 S'appuie sur les points d'extension existants de Paperclip :
 
-- **Index de code** par projet (stockage côté serveur) : structure, symboles,
-  résumés d'archi, documents de flux, (option) embeddings.
-- **Niveaux de contexte** matérialisés comme artefacts adressables :
-  `architecture`, `flux`, `carte-modules`, `fichier`, `recherche`.
-- **Politique de contexte par rôle** : à chaque heartbeat, on injecte dans le
-  `heartbeat-context` de l'agent **seulement** les niveaux autorisés/pertinents
-  pour son rôle.
-- **Skills de récupération** : un agent autorisé (ex. CTO) peut *descendre*
-  explicitement via `search_code`, `get_file`, `get_architecture_summary`.
+- **Index de code** par projet (stockage serveur) : structure, symboles,
+  résumés, flux, (option) embeddings.
+- **Niveaux de contexte** matérialisés comme artefacts adressables (cf. §3).
+- **Politique de contexte par rôle** = la matrice du §4, appliquée à chaque
+  heartbeat : on injecte les niveaux **◎** et on autorise les **○** en
+  drill-down.
+- **Skills de récupération** pour les niveaux **○** : `search_code`, `get_file`,
+  `get_module_map`, `get_architecture_summary`…
 
-> Détail du découpage en chantiers : voir [03 — Epics](./03-epics.md).
+> Découpage en chantiers : voir [03 — Epics](./03-epics.md).
 
-## 5. Exemple de bout en bout
+## 7. Exemple de bout en bout
 
-1. Le **CEO** lit le document d'archi + les objectifs → décide de prioriser
-   l'epic « facturation » et **délègue** au CTO.
-2. Le **CTO** reçoit l'intention, *drill-down* dans la carte des modules de
-   facturation, identifie les fichiers impactés, et **cadre** 3 tickets précis.
-3. Chaque ticket part à un **Coder** avec worktree → diff.
-4. La **QA** valide le diff contre les specs du ticket.
+1. Le **CEO** lit l'archi + les objectifs → priorise l'epic « facturation » et
+   **délègue** au CTO et au PO.
+2. Le **PO** précise les user stories et les parcours impactés (niveaux 7, 8).
+3. Le **CTO** *drill-down* dans la carte des modules de facturation (niveau 5),
+   identifie les fichiers (niveau 6) et **cadre** des tickets DEV.
+4. Chaque **DEV** implémente dans son worktree → diff.
+5. L'**UI/UX** ajuste les écrans concernés ; le **SEO/GEO** vérifie l'impact sur
+   les pages publiques et métadonnées (niveau 10).
 
 À aucun moment le CEO n'a chargé le code complet : il a eu une **vue
 suffisante pour déléguer**.

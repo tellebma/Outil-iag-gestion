@@ -30,17 +30,21 @@ Deux capacités nouvelles, complémentaires :
 
 ## 3. Le principe central : le contexte à la bonne altitude
 
-Tous les agents **n'ont pas besoin du code complet**.
+Tous les agents **n'ont pas besoin du code complet**. L'organisation cible
+compte les rôles : **CEO · CTO · PO · n × DEV · SEO/GEO · UI/UX** (+ rôles
+optionnels Architecte/Doc, QA, DevOps).
 
 - Le **CEO** a besoin de **documents d'archi, de flux, d'objectifs** — une vue
   *suffisante* pour **prioriser et déléguer**.
-- Le **CTO** descend dans le détail pour **cadrer précisément** la demande
-  avant de la confier à un agent codeur.
-- Le **Coder** a besoin du code complet et de son worktree pour produire.
-- La **QA** a besoin des specs, tests et diffs.
+- Le **CTO** descend dans le détail pour **cadrer techniquement** la demande.
+- Le **PO** possède le **backlog** et les **parcours** (specs produit).
+- Les **DEV** ont besoin du code complet et de leur worktree pour produire.
+- **UI/UX** vit dans les **parcours & composants** ; **SEO/GEO** dans le
+  **contenu public & les métadonnées**.
 
-C'est une **pyramide de contexte par rôle**, alimentée à partir du code réel.
-Détaillée dans [02 — Modèle de contexte par rôle](./02-modele-de-contexte-par-role.md).
+Chaque rôle reçoit ainsi un **profil de contexte** dédié, alimenté à partir du
+code réel. Détaillé — avec org chart et matrice rôle × niveau — dans
+[02 — Modèle de contexte par rôle](./02-modele-de-contexte-par-role.md).
 
 ## 4. Périmètre
 
