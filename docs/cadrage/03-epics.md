@@ -26,8 +26,11 @@ la stratégie d'intégration (fork vs plugin vs autonome).
 **Valeur** : tout le monde (humain + agents) partage la même cible.
 **Livrables**
 - [x] Documents de cadrage (`docs/cadrage/`).
-- [ ] Décision validée sur la **stratégie d'intégration** (point ouvert n°1).
-- [ ] Mise en place du squelette de repo selon l'option retenue.
+- [x] Décisions actées : **fork (A)**, indexation **totale (embeddings)**,
+  docs **hybrides** (génération depuis le code par défaut).
+- [ ] **Création du fork Paperclip** (⏳ en attente — côté utilisateur).
+- [ ] Carte des points d'extension Paperclip (cf. doc 04).
+- [ ] Squelette de l'extension une fois le fork disponible.
 
 ## E1 — Ingestion & cartographie du code
 **Objectif** : à l'ajout d'un repo, construire automatiquement une
@@ -41,7 +44,9 @@ d'entrée, conventions, et **résumés d'architecture**.
 - (Option) En tant que système, je calcule des **embeddings** pour la recherche
   sémantique.
 **Livrables** : pipeline d'ingestion, schéma de l'index, stockage côté serveur.
-**Points ouverts** : profondeur initiale (résumés seuls vs embeddings) — n°2.
+**Profondeur (décidée)** : « la totale » — structure + symboles + résumés +
+**embeddings** pour la recherche sémantique (ex. `pgvector` sur le PostgreSQL
+de Paperclip, à confirmer sur le fork).
 
 ## E2 — Modèle de contexte par rôle
 **Objectif** : matérialiser la **pyramide de contexte** — définir les niveaux

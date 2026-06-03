@@ -88,15 +88,10 @@ composants (◎ sur 8, 9, 4).
 
 ## 5. D'où viennent les documents d'archi / flux ?
 
-Trois sources possibles (*point ouvert n°3*) :
-
-1. **Générés depuis le code** par la couche d'ingestion (carte des modules,
-   dépendances → résumés).
-2. **Rédigés à la main** et versionnés.
-3. **Hybride entretenu par les agents** : génération automatique du socle, puis
-   raffinage/validation par un agent **Architecte/Doc** (ou le CTO).
-
-Cible privilégiée : l'**hybride**.
+**Décision : hybride.** Par défaut, on **génère depuis le code** (carte des
+modules, dépendances → résumés) dès que rien n'existe ; puis un agent
+**Architecte/Doc** (ou le CTO) **raffine et valide**. Les documents rédigés à la
+main, quand ils existent, font autorité sur la génération automatique.
 
 ## 6. Mécanisme d'implémentation (esquisse)
 
