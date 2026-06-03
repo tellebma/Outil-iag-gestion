@@ -14,17 +14,20 @@ terrain pour démarrer **immédiatement** une fois le fork disponible.
 
 ## 2. Logistique du fork (à trancher)
 
-Deux montages possibles :
+**Décision : (a) repo de fork dédié.** Montage retenu :
 
-- **(a) Repo de fork dédié** — forker `paperclipai/paperclip` dans un repo à
-  part, et garder `Outil-iag-gestion` comme repo de **pilotage/cadrage** (docs,
-  specs, suivi). ✅ Reçoit facilement les mises à jour upstream (`git remote add
-  upstream`). ✅ Sépare clairement notre extension du moteur.
-- **(b) Intégration dans `Outil-iag-gestion`** — importer le code Paperclip
-  dans ce repo. ✅ Tout au même endroit. ⚠️ Plus difficile de suivre l'upstream.
+| Repo | Rôle | Contenu |
+|------|------|---------|
+| **`Outil-iag-gestion`** (celui-ci) | **Pilotage / produit** — *conservé* | Cadrage, specs, plan, suivi, et les **modules fork-indépendants** (ex. prototype d'ingestion) |
+| **Fork de Paperclip** (repo séparé, à créer) | **Moteur** | Code Paperclip + notre extension *code-aware* |
 
-**Recommandation : (a)**, pour pouvoir `merge`/`rebase` les évolutions de
-Paperclip sans douleur. À confirmer.
+`Outil-iag-gestion` **n'est pas abandonné** : il reste la **source de vérité
+produit** (vision, décisions, specs) et l'atelier des composants réutilisables.
+Le fork **consomme** ces specs/modules (import direct, sous-module git, ou
+package publié).
+
+> ✅ Reçoit facilement l'upstream (`git remote add upstream …` sur le fork).
+> ✅ Sépare clairement notre extension du moteur Paperclip.
 
 > Rappel licence : Paperclip est **MIT** → fork et modification autorisés, à
 > condition de conserver la mention de licence d'origine.

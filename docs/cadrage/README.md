@@ -17,6 +17,13 @@ soient ancrées dans la réalité de la base de code — et non génériques.
 | [03 — Epics](./03-epics.md) | Le découpage en epics priorisés, avec valeur, périmètre et livrables |
 | [04 — Stratégie d'intégration](./04-strategie-integration.md) | Fork de Paperclip, carte des points d'extension, logistique |
 
+### Specs techniques (fork-indépendantes)
+
+| Spec | Contenu |
+|------|---------|
+| [E1 — Index de code](../specs/E1-index-de-code.md) | Pipeline d'ingestion, modèle de données, embeddings, API de récupération |
+| [E2 — Politique de contexte](../specs/E2-politique-de-contexte.md) | Matrice rôle × niveau en configuration, résolution au heartbeat, budget/troncature |
+
 ## Principe directeur
 
 Paperclip orchestre une **équipe d'agents** (org chart, budgets, tickets,
