@@ -32,58 +32,79 @@ package publié).
 > Rappel licence : Paperclip est **MIT** → fork et modification autorisés, à
 > condition de conserver la mention de licence d'origine.
 
-## 3. Architecture de Paperclip (rappel, à vérifier sur le fork)
+## 3. Architecture de Paperclip — **vérifiée** sur le fork
 
-Monorepo **TypeScript** (pnpm), **PostgreSQL**, UI **React**. Packages connus :
-`server/`, `ui/`, `cli/`, `packages/`, `skills/`, `.agents/`, `.claude/`.
+> Source : lecture du fork `tellebma/paperclip-plusplus` @ `70b1a91`.
 
-Flux d'un **heartbeat** : identité (`GET /api/agents/me`) → inbox
-(`/api/agents/me/inbox-lite`) → **checkout** d'un ticket
-(`POST /api/issues/{id}/checkout`) → **contexte** (heartbeat-context API) →
-exécution (via **adapter**) → mise à jour (`PATCH /api/issues/{id}`) →
-délégation (création de sous-tickets). Chaque appel mutant porte
-`X-Paperclip-Run-Id` (traçabilité).
+Monorepo **TypeScript** (pnpm). **ORM = Drizzle**. DB : **PostgreSQL 17** en
+prod (docker), **PGlite embarqué** en dev local par défaut. UI **React**.
 
-## 4. Carte des points d'extension (préliminaire)
+**Packages** (`packages/`) :
 
-Où brancher chaque epic. **À valider en lisant le code du fork.**
+| Package | Rôle |
+|---------|------|
+| `db` | Schéma Drizzle, migrations, clients DB |
+| `shared` | Types API, validators, constantes |
+| `adapter-utils` | Utilitaires adapters (skills, env vars…) |
+| `adapters/*` | Implémentations d'adapters (`claude-local`, `cursor`…) |
+| `plugins` | SDK de plugins + exemples |
+| `skills-catalog` | Catalogue de skills (CLI + métadonnées) |
+| `mcp-server` | Intégration **MCP** (exposition d'outils aux agents) |
 
-| Epic | Point d'extension Paperclip | Nature du changement |
-|------|-----------------------------|----------------------|
-| **E1** Ingestion & index | Nouveau package `packages/code-index` + **migration PostgreSQL** (table d'index + colonnes `pgvector`) | Ajout (peu invasif) |
-| **E2** Contexte par rôle | Config de politique (matrice rôle×niveau) + couche de sélection | Ajout + lecture du rôle d'agent |
-| **E3** Skills de récupération | Système de **company skills** (`POST /api/agents/{id}/skills/sync`) → skills `search_code`, `get_file`, `get_module_map`… | Ajout de skills + contrôle d'accès par rôle |
-| **E4** Injection contexte | **Hook dans le builder du `heartbeat-context`** (server-side) | Modification ciblée du serveur |
-| **E5** Cadrage assisté | **Routines** + **AGENTS.md templates** (rôles CEO/CTO/PO/DEV/SEO-GEO/UI-UX) | Ajout de templates/routines |
-| **E6** Session Claude | **Adapter** type « Claude Code » étendu (transcript, diff, `--resume`) | Nouvel adapter + modèle « session » |
-| **E7** Cockpit UI | Package `ui/` (React) | Ajout de vues |
+**Serveur** (`server/src/`) : `routes/` (REST), `services/` (logique métier,
+dont `heartbeat.ts`), `adapters/` (registry + plugin-loader), `middleware/`.
 
-### Points sensibles à vérifier sur le fork
-- Comment le **rôle** d'un agent est exposé au moment du build du contexte
-  (nécessaire pour appliquer la matrice du doc 02).
-- Le `heartbeat-context` est-il **extensible** proprement (hook/plugin) ou
-  faut-il modifier le cœur ?
-- PostgreSQL supporte-t-il **`pgvector`** dans leur setup Docker (pour les
-  embeddings) ?
-- Format exact des **adapters** et du **workspace/worktree** (pour E6).
-- Système de **plugins** : jusqu'où permet-il d'éviter de modifier le cœur ?
+**Flux d'un heartbeat** : la route `GET /api/issues/:id/heartbeat-context`
+(`server/src/routes/issues.ts:2188`) assemble le contexte ; l'exécution
+(`server/src/services/heartbeat.ts:7016`, `executeRun`) parse
+`run.contextSnapshot`, récupère l'agent (`getAgent(run.agentId)` → `agent.role`)
+et passe le tout à l'**adapter** via `AdapterExecutionContext`.
 
-## 5. Plan de démarrage (dès le fork disponible)
+## 4. Carte des points d'extension — **vérifiée**
 
-1. Cloner le fork, lancer le projet en local (docker + dev server).
-2. **Vérifier la carte du §4** en lisant le code → figer le doc 04.
-3. **E1** : migration `pgvector` + package `code-index` + pipeline d'ingestion.
-4. **E2** : matérialiser la matrice rôle×niveau en config.
-5. **E3 ∥ E4** : skills de récupération + hook d'injection.
-6. Démo de bout en bout (exemple du doc 02, §7).
+Légende impact : 🟢 ajout orthogonal · 🟡 petite modif du cœur · 🔴 chantier infra.
 
-## 6. Ce qu'on peut faire **sans** le fork (en attendant)
+| Epic | Point d'ancrage (fichier réel) | Impact |
+|------|--------------------------------|--------|
+| **E1** Index de code | Nouveau schéma `packages/db/src/schema/code_index.ts` (+ export `index.ts`, `pnpm db:generate`) + service `server/src/services/code-index.ts` | 🟢 |
+| **E1bis** Embeddings | `pgvector` **absent** du `docker/docker-compose.yml` (postgres:17-alpine) + dev en PGlite → init script / image custom (ou extension vector PGlite) | 🔴 |
+| **E2** Contexte par rôle | Service `context-policy` lisant `agent.role` (`packages/db/src/schema/agents.ts:20`), appliqué **dans** `server/src/routes/issues.ts:~2220` avant `res.json()` | 🟡 |
+| **E3** Skills de récupération | **Voie recommandée : `packages/mcp-server`** → outils `search_code`/`get_file`/`get_module_map` exposés en MCP. Alt. : adapter custom enregistré via `registerServerAdapter()` (`server/src/adapters/registry.ts:619`) | 🟢 |
+| **E4** Injection contexte | Même hook que E2 (le `heartbeat-context` n'a **pas** de hook de plugin → modif ciblée de la route) | 🟡 |
+| **E5** Cadrage assisté | Templates `AGENTS.md` + routines, rôles CEO/CTO/PO/DEV/SEO-GEO/UI-UX | 🟢 |
+| **E6** Session Claude | Wrapper `packages/adapters/claude-contextual/` autour de `claude-local` (`packages/adapters/claude-local/src/server/execute.ts`) + `sessionManagement` | 🟢/🟡 |
+| **E7** Cockpit UI | Package `ui/` (React) | 🟢 |
 
-- ✅ Cadrage (ce dossier).
-- ⬜ **Spec de l'index de code** (E1) : schéma de données, champs, format des
-  niveaux de contexte, stratégie d'embeddings — indépendant de Paperclip.
-- ⬜ **Spec de la politique de contexte** (E2) : format de configuration de la
-  matrice rôle×niveau.
-- ⬜ **Prototype d'ingestion autonome** : un petit module qui indexe un repo et
-  produit la carte des modules + résumés, testable hors Paperclip, puis branché
-  sur le fork le moment venu.
+### Constats clés (issus de la lecture du code)
+- **Pas de hook d'enrichissement du `heartbeat-context`** dans le système de
+  plugins → E2/E4 imposent une **petite modification du cœur** (route issues).
+  ➡️ **Confirme que le fork (Option A) était nécessaire** ; un plugin externe
+  n'aurait pas suffi.
+- Le **rôle d'agent existe déjà** (`agents.role`, défaut `"general"`) → il faut
+  juste une **convention de nommage** des rôles (CEO/CTO/PO/DEV/SEO_GEO/UI_UX).
+- **Aucun contrôle d'accès aux skills par rôle** aujourd'hui → à créer (E2/E3).
+- **`mcp-server`** existe → voie idéale pour les skills de récupération (E3).
+- **pgvector** = vrai chantier infra (E1bis) : décider PGlite-vector vs image
+  Postgres avec `pgvector`.
+
+## 5. Plan de démarrage (dès le fork accessible en écriture)
+
+1. Installer & lancer le fork en local (`pnpm i`, dev server, DB).
+2. **Convention de rôles** : mapper CEO/CTO/PO/DEV/SEO_GEO/UI_UX sur `agents.role`.
+3. **E1** : schéma `code_index` (Drizzle) + service `code-index` + pipeline
+   d'ingestion (cf. [spec E1](../specs/E1-index-de-code.md)).
+4. **E1bis** : trancher l'infra embeddings (pgvector) et la câbler.
+5. **E2/E4** : service `context-policy` (cf. [spec E2](../specs/E2-politique-de-contexte.md))
+   branché dans `routes/issues.ts` (heartbeat-context).
+6. **E3** : outils `search_code`/`get_file` via `mcp-server`.
+7. Démo de bout en bout (exemple du doc 02, §7).
+
+## 6. Statut d'accès (cette session)
+
+- ✅ Fork **lisible/clonable** (réseau public OK).
+- ❌ Fork **non poussable** depuis cette session : le proxy git répond
+  *« repository not authorized »* et l'outil `add_repo` est indisponible ici.
+  Le périmètre est verrouillé sur `Outil-iag-gestion`.
+- ➡️ **Pour coder ET pousser sur le fork** : l'ajouter aux repos/sources de
+  l'environnement sur claude.ai/code, ou démarrer une session ciblant
+  `paperclip-plusplus`.
